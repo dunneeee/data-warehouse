@@ -293,7 +293,7 @@ pip install -r requirements.txt --force-reinstall
 
 ## License
 
-Educational project - HCMUTE Data Warehouse Lab
+Educational project - DNVKU Data Warehouse Lab
 
 ## Contact
 
