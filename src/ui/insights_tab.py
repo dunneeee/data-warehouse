@@ -82,3 +82,71 @@ def render_combined_insights(revenue_analysis, lottery_analysis, start_date, end
             st.altair_chart(chart, width="stretch")
         else:
             st.info("Không có dữ liệu")
+    
+    st.markdown("---")
+    
+    st.subheader("Tương quan Chéo: Ảnh hưởng Số Xổ số đến Doanh thu Ngày sau")
+    st.caption("Phân tích: Kết quả xổ số ngày T có ảnh hưởng đến doanh thu bán vé ngày T+1 không?")
+    
+    df = revenue_analysis.get_lottery_number_revenue_impact()
+    
+    if not df.empty:
+        col3, col4 = st.columns([2, 1])
+        
+        with col3:
+            top_20 = df.head(20)
+            
+            chart = alt.Chart(top_20).mark_bar().encode(
+                x=alt.X('avg_next_day_revenue:Q', 
+                    title='Doanh thu TB ngày sau (VND)',
+                    axis=alt.Axis(format=',.0f')
+                ),
+                y=alt.Y('last_two_digits:N', 
+                    title='Số (2 chữ số cuối)',
+                    sort='-x'
+                ),
+                color=alt.Color('avg_next_day_revenue:Q',
+                    scale=alt.Scale(scheme='blues'),
+                    legend=None
+                ),
+                tooltip=[
+                    alt.Tooltip('last_two_digits:N', title='Số'),
+                    alt.Tooltip('occurrence_count:Q', title='Số lần xuất hiện', format=','),
+                    alt.Tooltip('avg_next_day_revenue:Q', title='Doanh thu TB', format=',.0f'),
+                    alt.Tooltip('total_next_day_revenue:Q', title='Tổng doanh thu', format=',.0f')
+                ]
+            ).properties(height=500)
+            
+            st.altair_chart(chart, width="stretch")
+        
+        with col4:
+            st.metric("Tổng số phân tích", len(df))
+            
+            top_number = df.iloc[0]
+            st.metric(
+                f"Số có impact cao nhất",
+                top_number['last_two_digits'],
+                f"{top_number['avg_next_day_revenue']:,.0f} VND"
+            )
+            
+            bottom_number = df.iloc[-1]
+            st.metric(
+                f"Số có impact thấp nhất",
+                bottom_number['last_two_digits'],
+                f"{bottom_number['avg_next_day_revenue']:,.0f} VND"
+            )
+            
+            st.dataframe(
+                df[['last_two_digits', 'occurrence_count', 'avg_next_day_revenue']].head(10),
+                hide_index=True,
+                column_config={
+                    'last_two_digits': 'Số',
+                    'occurrence_count': 'Lần xuất hiện',
+                    'avg_next_day_revenue': st.column_config.NumberColumn(
+                        'Doanh thu TB',
+                        format='%.0f VND'
+                    )
+                }
+            )
+    else:
+        st.info("Không có dữ liệu")

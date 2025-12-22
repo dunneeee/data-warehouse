@@ -278,3 +278,26 @@ class RevenueAnalysis:
         
         results = self.db.fetchall(query)
         return pd.DataFrame([dict(row) for row in results])
+    
+    def get_lottery_number_revenue_impact(self) -> pd.DataFrame:
+        query = """
+        SELECT 
+            SUBSTR(lr.result_number, -2) as last_two_digits,
+            COUNT(DISTINCT d1.full_date) as occurrence_count,
+            AVG(r.total_revenue) as avg_next_day_revenue,
+            SUM(r.total_revenue) as total_next_day_revenue,
+            MIN(r.total_revenue) as min_next_day_revenue,
+            MAX(r.total_revenue) as max_next_day_revenue
+        FROM Fact_Lottery_Result lr
+        JOIN Dim_Date d1 ON lr.date_id = d1.date_id
+        JOIN Dim_Date d2 ON d2.full_date = DATE(d1.full_date, '+1 day')
+        JOIN Fact_Revenue r ON r.date_id = d2.date_id
+        WHERE lr.result_number IS NOT NULL 
+        AND LENGTH(lr.result_number) >= 2
+        GROUP BY last_two_digits
+        HAVING COUNT(DISTINCT d1.full_date) >= 3
+        ORDER BY avg_next_day_revenue DESC
+        """
+        
+        results = self.db.fetchall(query)
+        return pd.DataFrame([dict(row) for row in results])

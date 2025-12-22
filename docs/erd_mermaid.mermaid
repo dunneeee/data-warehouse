@@ -1,0 +1,90 @@
+erDiagram
+    %% ============================================
+    %% SHARED DIMENSIONS (Dùng chung)
+    %% ============================================
+    
+    Dim_Date {
+        int date_id PK
+        date full_date
+        int day
+        int month
+        int year
+        int quarter
+        string day_of_week
+        int is_weekend
+        int is_month_start
+        int is_month_end
+    }
+
+    Dim_Station {
+        int station_id PK
+        string station_name "Hanoi, HoChiMinh, DaNang..."
+        string region "North/South"
+    }
+
+    %% ============================================
+    %% DIMENSIONS CHO KẾT QUẢ XỔ SỐ
+    %% ============================================
+    
+    Dim_Prize {
+        int prize_id PK
+        string prize_name "Đặc biệt, Nhất, Nhì, Ba, Tư, Năm, Sáu, Bảy"
+        int prize_order "Thứ tự loại giải: 1=ĐB, 2=Nhất, 3=Nhì..."
+        int quantity "Số lượng giải trong loại này: 1, 1, 2, 6, 4, 6, 3, 4"
+        int digits "Số chữ số: 6, 5, 5, 5, 4, 4, 3, 2"
+        float prize_value "Giá trị tiền thưởng (VND)"
+    }
+
+    %% ============================================
+    %% DIMENSIONS CHO DOANH THU
+    %% ============================================
+    
+    Dim_Agency {
+        int agency_id PK
+        string agency_name "Tên đại lý"
+        string agency_type "Cấp 1 / Cấp 2"
+    }
+
+    %% ============================================
+    %% FACT TABLE 1: KẾT QUẢ XỔ SỐ (CẢI TIẾN)
+    %% ============================================
+    
+    Fact_Lottery_Result {
+        int result_id PK
+        int date_id FK
+        int station_id FK
+        int prize_id FK
+        int prize_sequence "Thứ tự trong cùng loại giải (1, 2, 3...)"
+        string result_number "Con số quay được"
+    }
+
+    %% ============================================
+    %% FACT TABLE 2: DOANH THU
+    %% ============================================
+    
+    Fact_Revenue {
+        int revenue_id PK
+        int date_id FK
+        int station_id FK
+        int agency_id FK
+        int tickets_sold "Số vé bán ra"
+        float ticket_price "Giá vé (VND)"
+        float total_revenue "Tổng tiền thu = tickets_sold * ticket_price"
+        float total_payout "Tổng tiền trả thưởng"
+        float net_profit "Lợi nhuận = total_revenue - total_payout"
+        float commission "Hoa hồng đại lý"
+    }
+
+    %% ============================================
+    %% RELATIONSHIPS
+    %% ============================================
+    
+    %% Fact_Lottery_Result relationships
+    Dim_Date ||--o{ Fact_Lottery_Result : "happens_on"
+    Dim_Station ||--o{ Fact_Lottery_Result : "drawn_by"
+    Dim_Prize ||--o{ Fact_Lottery_Result : "belongs_to"
+
+    %% Fact_Revenue relationships
+    Dim_Date ||--o{ Fact_Revenue : "recorded_on"
+    Dim_Station ||--o{ Fact_Revenue : "sales_for"
+    Dim_Agency ||--o{ Fact_Revenue : "sold_by"
